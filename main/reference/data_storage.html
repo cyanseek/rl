@@ -1520,6 +1520,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.ReplayBuffer.html">ReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.RateLimitedReplayBuffer.html">RateLimitedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.OfflineToOnlineReplayBuffer.html">OfflineToOnlineReplayBuffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.ReplayBufferDataset.html">ReplayBufferDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.ReplayBufferEnsemble.html">ReplayBufferEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.PrioritizedReplayBuffer.html">PrioritizedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.TensorDictReplayBuffer.html">TensorDictReplayBuffer</a></li>
@@ -1535,6 +1536,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.TrajectoryPredicate.html">TrajectoryPredicate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.filter_trajectories.html">filter_trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.iter_trajectories.html">iter_trajectories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.tensordict_collate.html">tensordict_collate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.find_start_stop_traj.html">find_start_stop_traj</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.TED2Flat.html">TED2Flat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.Flat2TED.html">Flat2TED</a></li>
@@ -1557,6 +1559,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.replay_buffers.NestedStorageCheckpointer.html">NestedStorageCheckpointer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.replay_buffers.Storage.html">Storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageCheckpointerBase.html">StorageCheckpointerBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageDataset.html">StorageDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageEnsemble.html">StorageEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageEnsembleCheckpointer.html">StorageEnsembleCheckpointer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html">TensorStorage</a></li>
@@ -2659,16 +2662,19 @@ document.write(`
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageCheckpointerBase.html#torchrl.data.replay_buffers.StorageCheckpointerBase" title="torchrl.data.replay_buffers.StorageCheckpointerBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StorageCheckpointerBase</span></code></a>()</p></td>
 <td><p>Public base class for storage checkpointers.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageEnsemble.html#torchrl.data.replay_buffers.StorageEnsemble" title="torchrl.data.replay_buffers.StorageEnsemble"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StorageEnsemble</span></code></a>(*storages[, transforms])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageDataset.html#torchrl.data.replay_buffers.StorageDataset" title="torchrl.data.replay_buffers.StorageDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StorageDataset</span></code></a>(storage)</p></td>
+<td><p>A map-style <a class="reference external" href="https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v2.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code></a> reading a TorchRL storage.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageEnsemble.html#torchrl.data.replay_buffers.StorageEnsemble" title="torchrl.data.replay_buffers.StorageEnsemble"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StorageEnsemble</span></code></a>(*storages[, transforms])</p></td>
 <td><p>An ensemble of storages.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageEnsembleCheckpointer.html#torchrl.data.replay_buffers.StorageEnsembleCheckpointer" title="torchrl.data.replay_buffers.StorageEnsembleCheckpointer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StorageEnsembleCheckpointer</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageEnsembleCheckpointer.html#torchrl.data.replay_buffers.StorageEnsembleCheckpointer" title="torchrl.data.replay_buffers.StorageEnsembleCheckpointer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StorageEnsembleCheckpointer</span></code></a>()</p></td>
 <td><p>Checkpointer for ensemble storages.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorStorage</span></code></a>(storage[, max_size, device, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage" title="torchrl.data.replay_buffers.TensorStorage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorStorage</span></code></a>(storage[, max_size, device, ...])</p></td>
 <td><p>A storage for tensors and tensordicts.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorageCheckpointer.html#torchrl.data.replay_buffers.TensorStorageCheckpointer" title="torchrl.data.replay_buffers.TensorStorageCheckpointer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorStorageCheckpointer</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/torchrl.data.replay_buffers.TensorStorageCheckpointer.html#torchrl.data.replay_buffers.TensorStorageCheckpointer" title="torchrl.data.replay_buffers.TensorStorageCheckpointer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorStorageCheckpointer</span></code></a>()</p></td>
 <td><p>A storage checkpointer for TensorStorages.</p></td>
 </tr>
 </tbody>
@@ -2682,6 +2688,19 @@ in distributed reinforcement learning settings with larger data volumes.
 advised in distributed settings with shared storage due to the lower serialization
 cost of MemoryMappedTensors as well as the ability to specify file storage locations
 for improved node failure recovery.</p>
+</section>
+<section id="storages-as-torch-datasets">
+<h2>Storages as torch datasets<a class="headerlink" href="#storages-as-torch-datasets" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="generated/torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage.as_dataset" title="torchrl.data.replay_buffers.Storage.as_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">as_dataset()</span></code></a> returns a map-style
+<a class="reference external" href="https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v2.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code></a>, a <a class="reference internal" href="generated/torchrl.data.replay_buffers.StorageDataset.html#torchrl.data.replay_buffers.StorageDataset" title="torchrl.data.replay_buffers.StorageDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">StorageDataset</span></code></a>, that a
+<a class="reference external" href="https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v2.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></a> reads with any torch sampler and
+worker processes, fetching each index batch with a single
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code> call. Pass
+<a class="reference internal" href="generated/torchrl.data.tensordict_collate.html#torchrl.data.tensordict_collate" title="torchrl.data.tensordict_collate"><code class="xref py py-func docutils literal notranslate"><span class="pre">tensordict_collate()</span></code></a> as <code class="docutils literal notranslate"><span class="pre">collate_fn</span></code>, read
+multi-dimensional storages through
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">flatten()</span></code>, and see
+<span class="xref std std-ref">ref_buffers</span> for reading whole buffers through their sampler and
+transforms.</p>
 </section>
 </section>
 
@@ -2803,6 +2822,7 @@ for improved node failure recovery.</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#storage-performance">Storage Performance</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#storages-as-torch-datasets">Storages as torch datasets</a></li>
 </ul>
   </nav></div>
     
@@ -3055,7 +3075,7 @@ for improved node failure recovery.</p>
        "headline": "Storage Backends",
        "description": "PyTorch Documentation. Explore PyTorch, an open-source machine learning library that accelerates the path from research prototyping to production deployment.",
        "url": "/reference/data_storage.html",
-       "articleBody": "Storage Backends# TorchRL provides various storage backends for replay buffers, each optimized for different use cases. CompressedListStorage(max_size, *[, ...]) A storage that compresses and decompresses data. CompressedListStorageCheckpointer() A storage checkpointer for CompressedListStorage. FlatStorageCheckpointer([done_keys, reward_keys]) Saves the storage in a compact form, saving space on the TED format. H5StorageCheckpointer(*[, checkpoint_file, ...]) Saves the storage in a compact form, saving space on the TED format and using H5 format to save the data. ImmutableDatasetWriter([compilable]) A blocking writer for immutable datasets. LazyMemmapStorage(max_size, *[, ...]) A memory-mapped storage for tensors and tensordicts. LazyTensorStorage(max_size, *[, device, ...]) A pre-allocated tensor storage for tensors and tensordicts. ListStorage([max_size, compilable, device]) A storage stored in a list. LazyStackStorage([max_size, compilable, ...]) A ListStorage that returns LazyStackTensorDict instances. ListStorageCheckpointer() A storage checkpointer for ListStoage. NestedStorageCheckpointer([done_keys, ...]) Saves the storage in a compact form, saving space on the TED format and using memory-mapped nested tensors. Storage(max_size[, checkpointer, compilable]) A Storage is the container of a replay buffer. StorageCheckpointerBase() Public base class for storage checkpointers. StorageEnsemble(*storages[, transforms]) An ensemble of storages. StorageEnsembleCheckpointer() Checkpointer for ensemble storages. TensorStorage(storage[, max_size, device, ...]) A storage for tensors and tensordicts. TensorStorageCheckpointer() A storage checkpointer for TensorStorages. Storage Performance# Storage choice is very influential on replay buffer sampling latency, especially in distributed reinforcement learning settings with larger data volumes. LazyMemmapStorage is highly advised in distributed settings with shared storage due to the lower serialization cost of MemoryMappedTensors as well as the ability to specify file storage locations for improved node failure recovery.",
+       "articleBody": "Storage Backends# TorchRL provides various storage backends for replay buffers, each optimized for different use cases. CompressedListStorage(max_size, *[, ...]) A storage that compresses and decompresses data. CompressedListStorageCheckpointer() A storage checkpointer for CompressedListStorage. FlatStorageCheckpointer([done_keys, reward_keys]) Saves the storage in a compact form, saving space on the TED format. H5StorageCheckpointer(*[, checkpoint_file, ...]) Saves the storage in a compact form, saving space on the TED format and using H5 format to save the data. ImmutableDatasetWriter([compilable]) A blocking writer for immutable datasets. LazyMemmapStorage(max_size, *[, ...]) A memory-mapped storage for tensors and tensordicts. LazyTensorStorage(max_size, *[, device, ...]) A pre-allocated tensor storage for tensors and tensordicts. ListStorage([max_size, compilable, device]) A storage stored in a list. LazyStackStorage([max_size, compilable, ...]) A ListStorage that returns LazyStackTensorDict instances. ListStorageCheckpointer() A storage checkpointer for ListStoage. NestedStorageCheckpointer([done_keys, ...]) Saves the storage in a compact form, saving space on the TED format and using memory-mapped nested tensors. Storage(max_size[, checkpointer, compilable]) A Storage is the container of a replay buffer. StorageCheckpointerBase() Public base class for storage checkpointers. StorageDataset(storage) A map-style torch.utils.data.Dataset reading a TorchRL storage. StorageEnsemble(*storages[, transforms]) An ensemble of storages. StorageEnsembleCheckpointer() Checkpointer for ensemble storages. TensorStorage(storage[, max_size, device, ...]) A storage for tensors and tensordicts. TensorStorageCheckpointer() A storage checkpointer for TensorStorages. Storage Performance# Storage choice is very influential on replay buffer sampling latency, especially in distributed reinforcement learning settings with larger data volumes. LazyMemmapStorage is highly advised in distributed settings with shared storage due to the lower serialization cost of MemoryMappedTensors as well as the ability to specify file storage locations for improved node failure recovery. Storages as torch datasets# as_dataset() returns a map-style torch.utils.data.Dataset, a StorageDataset, that a torch.utils.data.DataLoader reads with any torch sampler and worker processes, fetching each index batch with a single get() call. Pass tensordict_collate() as collate_fn, read multi-dimensional storages through flatten(), and see ref_buffers for reading whole buffers through their sampler and transforms.",
        "author": {
          "@type": "Organization",
          "name": "PyTorch Contributors",

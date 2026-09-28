@@ -186,6 +186,38 @@ Example
 >>> assert (data == 1).all()
 ```
 
+as_dataset(***, *num_batches: int | None = None*) → [ReplayBufferDataset](torchrl.data.ReplayBufferDataset.html#torchrl.data.ReplayBufferDataset)
+
+Returns a [`torch.utils.data.IterableDataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset) streaming batches from this buffer.
+
+See [`ReplayBufferDataset`](torchrl.data.ReplayBufferDataset.html#torchrl.data.ReplayBufferDataset) for the DataLoader
+worker semantics.
+
+Keyword Arguments:
+
+**num_batches** (*int**or**None**,**optional*) - number of batches yielded by
+one iterator, shared between DataLoader workers. `None`
+streams batches until the sampler runs out. Defaults to
+`None`.
+
+Examples
+
+```
+>>> import torch
+>>> from torch.utils.data import DataLoader
+>>> from torchrl.data import LazyTensorStorage, ReplayBuffer, tensordict_collate
+>>> rb = ReplayBuffer(storage=LazyTensorStorage(100), batch_size=8)
+>>> _ = rb.extend(torch.arange(100))
+>>> loader = DataLoader(
+... rb.as_dataset(num_batches=4),
+... batch_size=None,
+... num_workers=2,
+... collate_fn=tensordict_collate,
+... )
+>>> [batch.shape for batch in loader]
+[torch.Size([8]), torch.Size([8]), torch.Size([8]), torch.Size([8])]
+```
+
 *classmethod*as_remote(*remote_config=None*)
 
 Creates an instance of a remote ray class.

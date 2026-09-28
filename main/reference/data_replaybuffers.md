@@ -35,6 +35,7 @@ buffer.shutdown()
 | --- | --- |
 | [`RateLimitedReplayBuffer`](generated/torchrl.data.RateLimitedReplayBuffer.html#torchrl.data.RateLimitedReplayBuffer)(*args[, ...]) | A replay buffer with a cumulative sample-to-insert ratio limit. |
 | [`OfflineToOnlineReplayBuffer`](generated/torchrl.data.OfflineToOnlineReplayBuffer.html#torchrl.data.OfflineToOnlineReplayBuffer)(offline_dataset, *) | A replay buffer combining an immutable offline dataset with a growing online buffer. |
+| [`ReplayBufferDataset`](generated/torchrl.data.ReplayBufferDataset.html#torchrl.data.ReplayBufferDataset)(replay_buffer, *[, ...]) | A [`torch.utils.data.IterableDataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset) streaming batches from a replay buffer. |
 | [`ReplayBufferEnsemble`](generated/torchrl.data.ReplayBufferEnsemble.html#torchrl.data.ReplayBufferEnsemble)(*args[, ...]) | An ensemble of replay buffers. |
 | [`PrioritizedReplayBuffer`](generated/torchrl.data.PrioritizedReplayBuffer.html#torchrl.data.PrioritizedReplayBuffer)(*args[, ...]) | Prioritized replay buffer. |
 | [`TensorDictReplayBuffer`](generated/torchrl.data.TensorDictReplayBuffer.html#torchrl.data.TensorDictReplayBuffer)(*args[, ...]) | TensorDict-specific wrapper around the [`ReplayBuffer`](generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer) class. |
@@ -387,6 +388,85 @@ capacity without scanning the full storage on every write. This mode supports
 `TensorStorage`, `LazyTensorStorage` and `LazyMemmapStorage` with uniform
 random sampling. Prefetching, prioritized replay and multidimensional storages
 are rejected explicitly.
+
+### Reading buffers with `torch.utils.data`
+
+[`as_dataset()`](generated/torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage.as_dataset) wraps a storage in a
+map-style [`torch.utils.data.Dataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset) and
+[`as_dataset()`](generated/torchrl.data.ReplayBuffer.html#torchrl.data.ReplayBuffer.as_dataset) wraps a buffer in a
+[`torch.utils.data.IterableDataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.IterableDataset), so a
+[`torch.utils.data.DataLoader`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader) can own the parallelism of the sample
+path. Pass [`tensordict_collate()`](generated/torchrl.data.tensordict_collate.html#torchrl.data.tensordict_collate) as `collate_fn`: the
+default torch collation does not handle tensordicts.
+
+A storage dataset reads like any map-style dataset. Torch samplers pick the
+indices and every index batch is fetched with a single storage read. The
+collate function also stacks lists of samples, lazily when their shapes
+differ, so storage datasets compose with
+[`torch.utils.data.ConcatDataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.ConcatDataset) and per-item storages such as
+[`ListStorage`](generated/torchrl.data.replay_buffers.ListStorage.html#torchrl.data.replay_buffers.ListStorage):
+
+```
+>>> import torch
+>>> from tensordict import TensorDict
+>>> from torch.utils.data import DataLoader
+>>> from torchrl.data import LazyTensorStorage, ReplayBuffer, tensordict_collate
+>>> rb = ReplayBuffer(storage=LazyTensorStorage(100))
+>>> _ = rb.extend(TensorDict({"obs": torch.arange(100)}, [100]))
+>>> loader = DataLoader(rb.storage.as_dataset(), batch_size=4, shuffle=True, collate_fn=tensordict_collate)
+>>> next(iter(loader))["obs"].shape
+torch.Size([4])
+```
+
+A buffer dataset keeps the TorchRL sampler and transforms and runs them in the
+DataLoader workers. Each worker holds a copy of the buffer, so this fits
+memory-mapped or dataset-backed storages whose sample path is expensive, such
+as video decoding. The storage content is shared rather than copied: workers
+see rows written after they start, and a row written while a worker reads it
+can come back partially updated. `num_batches` is split between workers,
+buffer prefetching is disabled in workers because the DataLoader prefetches,
+and buffers built with a `generator` are reseeded once per worker from the
+worker seed, so seeding the DataLoader (`torch.manual_seed` or
+`DataLoader(generator=...)`) makes worker sampling reproducible. Samplers
+whose `requires_shared_state` is
+`True`, every sampler except those that declare their draws stateless such
+as [`RandomSampler`](generated/torchrl.data.replay_buffers.RandomSampler.html#torchrl.data.replay_buffers.RandomSampler) and
+[`SliceSampler`](generated/torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler), are rejected when
+`num_workers > 0`, and so is a [`RateLimitedReplayBuffer`](generated/torchrl.data.RateLimitedReplayBuffer.html#torchrl.data.RateLimitedReplayBuffer)
+that has not been shared with `share()`.
+On a static dataset, give a [`SliceSampler`](generated/torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler)
+`cache_values=True` and keep the workers persistent so trajectory boundaries
+are scanned once per worker rather than once per batch:
+
+```
+>>> import torch
+>>> from tensordict import TensorDict
+>>> from torch.utils.data import DataLoader
+>>> from torchrl.data import (
+... LazyMemmapStorage,
+... SliceSampler,
+... TensorDictReplayBuffer,
+... tensordict_collate,
+... )
+>>> rb = TensorDictReplayBuffer(
+... storage=LazyMemmapStorage(1000),
+... sampler=SliceSampler(num_slices=4, traj_key="episode", cache_values=True),
+... batch_size=32,
+... )
+>>> _ = rb.extend(TensorDict({"obs": torch.randn(1000, 3), "episode": torch.arange(1000) // 50}, [1000]))
+>>> loader = DataLoader(
+... rb.as_dataset(num_batches=8),
+... batch_size=None,
+... num_workers=4,
+... persistent_workers=True,
+... collate_fn=tensordict_collate,
+... )
+>>> for batch in loader:
+... assert batch["obs"].shape == (32, 3)
+```
+
+| [`tensordict_collate`](generated/torchrl.data.tensordict_collate.html#torchrl.data.tensordict_collate)(batch) | Collate function for a [`torch.utils.data.DataLoader`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader) reading TorchRL storages or buffers. |
+| --- | --- |
 
 ### Detecting overwritten slots: generation stamps
 

@@ -102,3 +102,11 @@ Examples
 can_sample(*storage: [Storage](torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage)*, *batch_size: int*) → bool
 
 Returns whether the sampler can draw the requested batch.
+
+*property*requires_shared_state*: bool*
+
+bool(x) -> bool
+
+Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.

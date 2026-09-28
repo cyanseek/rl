@@ -36,3 +36,11 @@ as regular tensors.
 can_sample(*storage: [StorageEnsemble](torchrl.data.replay_buffers.StorageEnsemble.html#torchrl.data.replay_buffers.StorageEnsemble)*, *batch_size: int*) → bool[[source]](../../_modules/torchrl/data/replay_buffers/samplers/ensemble.html#SamplerEnsemble.can_sample)
 
 Returns whether the selected ensemble strategy can serve a batch.
+
+*property*requires_shared_state*: bool*
+
+bool(x) -> bool
+
+Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.

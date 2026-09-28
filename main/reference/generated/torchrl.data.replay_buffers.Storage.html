@@ -1520,6 +1520,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBuffer.html">ReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.RateLimitedReplayBuffer.html">RateLimitedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.OfflineToOnlineReplayBuffer.html">OfflineToOnlineReplayBuffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBufferDataset.html">ReplayBufferDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBufferEnsemble.html">ReplayBufferEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.PrioritizedReplayBuffer.html">PrioritizedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TensorDictReplayBuffer.html">TensorDictReplayBuffer</a></li>
@@ -1535,6 +1536,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TrajectoryPredicate.html">TrajectoryPredicate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.filter_trajectories.html">filter_trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.iter_trajectories.html">iter_trajectories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.tensordict_collate.html">tensordict_collate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.find_start_stop_traj.html">find_start_stop_traj</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TED2Flat.html">TED2Flat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.Flat2TED.html">Flat2TED</a></li>
@@ -1557,6 +1559,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.NestedStorageCheckpointer.html">NestedStorageCheckpointer</a></li>
 <li class="toctree-l3 current active"><a class="current reference internal" href="#">Storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageCheckpointerBase.html">StorageCheckpointerBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageDataset.html">StorageDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageEnsemble.html">StorageEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageEnsembleCheckpointer.html">StorageEnsembleCheckpointer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.TensorStorage.html">TensorStorage</a></li>
@@ -2634,8 +2637,34 @@ document.write(`
 <dd><p>A Storage is the container of a replay buffer.</p>
 <p>Every storage must have a set, get and __len__ methods implemented.
 Get and set should support integers as well as list of integers.</p>
+<p><a class="reference internal" href="#torchrl.data.replay_buffers.Storage.as_dataset" title="torchrl.data.replay_buffers.Storage.as_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">as_dataset()</span></code></a> wraps a storage in a map-style
+<a class="reference external" href="https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v2.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code></a> that a <a class="reference external" href="https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v2.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></a>
+reads with any torch sampler, fetching every index batch through a single
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code> call.</p>
 <p>The storage does not need to have a definite size, but if it does one should
 make sure that it is compatible with the buffer size.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchrl.data.replay_buffers.Storage.as_dataset">
+<span class="sig-name descname"><span class="pre">as_dataset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="torchrl.data.replay_buffers.StorageDataset.html#torchrl.data.replay_buffers.StorageDataset" title="torchrl.data.replay_buffers.dataloader.StorageDataset"><span class="pre">StorageDataset</span></a></span></span><a class="reference internal" href="../../_modules/torchrl/data/replay_buffers/storages/base.html#Storage.as_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.data.replay_buffers.Storage.as_dataset" title="Link to this definition">#</a></dt>
+<dd><p>Returns a map-style <a class="reference external" href="https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset" title="(in PyTorch v2.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code></a> reading this storage.</p>
+<p>See <code class="xref py py-class docutils literal notranslate"><span class="pre">StorageDataset</span></code> for the batched fetch and
+collation contract. Multi-dimensional storages are read through
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">flatten()</span></code>.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchrl.data</span> <span class="kn">import</span> <span class="n">LazyTensorStorage</span><span class="p">,</span> <span class="n">ReplayBuffer</span><span class="p">,</span> <span class="n">tensordict_collate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rb</span> <span class="o">=</span> <span class="n">ReplayBuffer</span><span class="p">(</span><span class="n">storage</span><span class="o">=</span><span class="n">LazyTensorStorage</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">=</span> <span class="n">rb</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">rb</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="n">as_dataset</span><span class="p">(),</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">tensordict_collate</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">loader</span><span class="p">))</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">torch.Size([4])</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.data.replay_buffers.Storage.attach">
 <span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/torchrl/data/replay_buffers/storages/base.html#Storage.attach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.data.replay_buffers.Storage.attach" title="Link to this definition">#</a></dt>
@@ -2805,6 +2834,7 @@ is shared with other buffers (eg. Priority Samplers).</p>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.Storage"><code class="docutils literal notranslate"><span class="pre">Storage</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.Storage.as_dataset"><code class="docutils literal notranslate"><span class="pre">Storage.as_dataset()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.Storage.attach"><code class="docutils literal notranslate"><span class="pre">Storage.attach()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.Storage.dump"><code class="docutils literal notranslate"><span class="pre">Storage.dump()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.Storage.load"><code class="docutils literal notranslate"><span class="pre">Storage.load()</span></code></a></li>
@@ -3065,7 +3095,7 @@ is shared with other buffers (eg. Priority Samplers).</p>
        "headline": "Storage",
        "description": "PyTorch Documentation. Explore PyTorch, an open-source machine learning library that accelerates the path from research prototyping to production deployment.",
        "url": "/reference/generated/torchrl.data.replay_buffers.Storage.html",
-       "articleBody": "Storage# class torchrl.data.replay_buffers.Storage(max_size: int, checkpointer: StorageCheckpointerBase | None = None, compilable: bool = False)# A Storage is the container of a replay buffer. Every storage must have a set, get and __len__ methods implemented. Get and set should support integers as well as list of integers. The storage does not need to have a definite size, but if it does one should make sure that it is compatible with the buffer size. attach(buffer: Any) \u2192 None[source]# This function attaches a sampler to this storage. Buffers that read from this storage must be included as an attached entity by calling this method. This guarantees that when data in the storage changes, components are made aware of changes even if the storage is shared with other buffers (eg. Priority Samplers). Parameters: buffer \u2013 the object that reads from this storage. dump(*args, **kwargs)[source]# Alias for dumps(). load(*args, **kwargs)[source]# Alias for loads(). register_load_hook(hook)[source]# Register a load hook for this storage. The hook is forwarded to the checkpointer. register_save_hook(hook)[source]# Register a save hook for this storage. The hook is forwarded to the checkpointer. save(*args, **kwargs)[source]# Alias for dumps().",
+       "articleBody": "Storage# class torchrl.data.replay_buffers.Storage(max_size: int, checkpointer: StorageCheckpointerBase | None = None, compilable: bool = False)# A Storage is the container of a replay buffer. Every storage must have a set, get and __len__ methods implemented. Get and set should support integers as well as list of integers. as_dataset() wraps a storage in a map-style torch.utils.data.Dataset that a torch.utils.data.DataLoader reads with any torch sampler, fetching every index batch through a single get() call. The storage does not need to have a definite size, but if it does one should make sure that it is compatible with the buffer size. as_dataset() \u2192 StorageDataset[source]# Returns a map-style torch.utils.data.Dataset reading this storage. See StorageDataset for the batched fetch and collation contract. Multi-dimensional storages are read through flatten(). Examples \u003e\u003e\u003e import torch \u003e\u003e\u003e from torch.utils.data import DataLoader \u003e\u003e\u003e from torchrl.data import LazyTensorStorage, ReplayBuffer, tensordict_collate \u003e\u003e\u003e rb = ReplayBuffer(storage=LazyTensorStorage(100)) \u003e\u003e\u003e _ = rb.extend(torch.arange(100)) \u003e\u003e\u003e loader = DataLoader( ... rb.storage.as_dataset(), batch_size=4, shuffle=True, collate_fn=tensordict_collate ... ) \u003e\u003e\u003e next(iter(loader)).shape torch.Size([4]) attach(buffer: Any) \u2192 None[source]# This function attaches a sampler to this storage. Buffers that read from this storage must be included as an attached entity by calling this method. This guarantees that when data in the storage changes, components are made aware of changes even if the storage is shared with other buffers (eg. Priority Samplers). Parameters: buffer \u2013 the object that reads from this storage. dump(*args, **kwargs)[source]# Alias for dumps(). load(*args, **kwargs)[source]# Alias for loads(). register_load_hook(hook)[source]# Register a load hook for this storage. The hook is forwarded to the checkpointer. register_save_hook(hook)[source]# Register a save hook for this storage. The hook is forwarded to the checkpointer. save(*args, **kwargs)[source]# Alias for dumps().",
        "author": {
          "@type": "Organization",
          "name": "PyTorch Contributors",

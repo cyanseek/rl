@@ -16,6 +16,7 @@ TorchRL provides various storage backends for replay buffers, each optimized for
 | [`NestedStorageCheckpointer`](generated/torchrl.data.replay_buffers.NestedStorageCheckpointer.html#torchrl.data.replay_buffers.NestedStorageCheckpointer)([done_keys, ...]) | Saves the storage in a compact form, saving space on the TED format and using memory-mapped nested tensors. |
 | [`Storage`](generated/torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage)(max_size[, checkpointer, compilable]) | A Storage is the container of a replay buffer. |
 | [`StorageCheckpointerBase`](generated/torchrl.data.replay_buffers.StorageCheckpointerBase.html#torchrl.data.replay_buffers.StorageCheckpointerBase)() | Public base class for storage checkpointers. |
+| [`StorageDataset`](generated/torchrl.data.replay_buffers.StorageDataset.html#torchrl.data.replay_buffers.StorageDataset)(storage) | A map-style [`torch.utils.data.Dataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset) reading a TorchRL storage. |
 | [`StorageEnsemble`](generated/torchrl.data.replay_buffers.StorageEnsemble.html#torchrl.data.replay_buffers.StorageEnsemble)(*storages[, transforms]) | An ensemble of storages. |
 | [`StorageEnsembleCheckpointer`](generated/torchrl.data.replay_buffers.StorageEnsembleCheckpointer.html#torchrl.data.replay_buffers.StorageEnsembleCheckpointer)() | Checkpointer for ensemble storages. |
 | [`TensorStorage`](generated/torchrl.data.replay_buffers.TensorStorage.html#torchrl.data.replay_buffers.TensorStorage)(storage[, max_size, device, ...]) | A storage for tensors and tensordicts. |
@@ -29,3 +30,16 @@ in distributed reinforcement learning settings with larger data volumes.
 advised in distributed settings with shared storage due to the lower serialization
 cost of MemoryMappedTensors as well as the ability to specify file storage locations
 for improved node failure recovery.
+
+## Storages as torch datasets
+
+[`as_dataset()`](generated/torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage.as_dataset) returns a map-style
+[`torch.utils.data.Dataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset), a [`StorageDataset`](generated/torchrl.data.replay_buffers.StorageDataset.html#torchrl.data.replay_buffers.StorageDataset), that a
+[`torch.utils.data.DataLoader`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader) reads with any torch sampler and
+worker processes, fetching each index batch with a single
+`get()` call. Pass
+[`tensordict_collate()`](generated/torchrl.data.tensordict_collate.html#torchrl.data.tensordict_collate) as `collate_fn`, read
+multi-dimensional storages through
+`flatten()`, and see
+ref_buffers for reading whole buffers through their sampler and
+transforms.

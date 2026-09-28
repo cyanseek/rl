@@ -1520,6 +1520,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBuffer.html">ReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.RateLimitedReplayBuffer.html">RateLimitedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.OfflineToOnlineReplayBuffer.html">OfflineToOnlineReplayBuffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBufferDataset.html">ReplayBufferDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBufferEnsemble.html">ReplayBufferEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.PrioritizedReplayBuffer.html">PrioritizedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TensorDictReplayBuffer.html">TensorDictReplayBuffer</a></li>
@@ -1535,6 +1536,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TrajectoryPredicate.html">TrajectoryPredicate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.filter_trajectories.html">filter_trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.iter_trajectories.html">iter_trajectories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.tensordict_collate.html">tensordict_collate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.find_start_stop_traj.html">find_start_stop_traj</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TED2Flat.html">TED2Flat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.Flat2TED.html">Flat2TED</a></li>
@@ -1557,6 +1559,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.NestedStorageCheckpointer.html">NestedStorageCheckpointer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.Storage.html">Storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageCheckpointerBase.html">StorageCheckpointerBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageDataset.html">StorageDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageEnsemble.html">StorageEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageEnsembleCheckpointer.html">StorageEnsembleCheckpointer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.TensorStorage.html">TensorStorage</a></li>
@@ -2632,6 +2635,19 @@ document.write(`
 <dt class="sig sig-object py" id="torchrl.data.replay_buffers.Sampler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchrl.data.replay_buffers.</span></span><span class="sig-name descname"><span class="pre">Sampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchrl.data.replay_buffers.Sampler" title="Link to this definition">#</a></dt>
 <dd><p>A generic sampler base class for composable Replay Buffers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>requires_shared_state</strong> (<em>bool</em>) – <code class="docutils literal notranslate"><span class="pre">True</span></code> when sampling mutates state that
+every consumer of the buffer must observe, such as
+without-replacement bookkeeping, priorities, consumption marks,
+staleness counters or streaming queues. Such a sampler cannot be
+copied into <a class="reference external" href="https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader" title="(in PyTorch v2.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.DataLoader</span></code></a> workers.
+Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>; samplers whose draws depend only on the
+storage content and their configuration, such as
+<a class="reference internal" href="torchrl.data.replay_buffers.RandomSampler.html#torchrl.data.replay_buffers.RandomSampler" title="torchrl.data.replay_buffers.RandomSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomSampler</span></code></a> and <a class="reference internal" href="torchrl.data.replay_buffers.SliceSampler.html#torchrl.data.replay_buffers.SliceSampler" title="torchrl.data.replay_buffers.SliceSampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">SliceSampler</span></code></a>, set it to
+<code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="torchrl.data.replay_buffers.Sampler.can_sample">
 <span class="sig-name descname"><span class="pre">can_sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">storage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="torchrl.data.replay_buffers.Storage.html#torchrl.data.replay_buffers.Storage" title="torchrl.data.replay_buffers.storages.Storage"><span class="pre">Storage</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/torchrl/data/replay_buffers/samplers/base.html#Sampler.can_sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchrl.data.replay_buffers.Sampler.can_sample" title="Link to this definition">#</a></dt>
@@ -3015,7 +3031,7 @@ document.write(`
        "headline": "Sampler",
        "description": "PyTorch Documentation. Explore PyTorch, an open-source machine learning library that accelerates the path from research prototyping to production deployment.",
        "url": "/reference/generated/torchrl.data.replay_buffers.Sampler.html",
-       "articleBody": "Sampler# class torchrl.data.replay_buffers.Sampler(*args, **kwargs)# A generic sampler base class for composable Replay Buffers. can_sample(storage: Storage, batch_size: int) \u2192 bool[source]# Returns whether the sampler can draw the requested batch.",
+       "articleBody": "Sampler# class torchrl.data.replay_buffers.Sampler(*args, **kwargs)# A generic sampler base class for composable Replay Buffers. Variables: requires_shared_state (bool) \u2013 True when sampling mutates state that every consumer of the buffer must observe, such as without-replacement bookkeeping, priorities, consumption marks, staleness counters or streaming queues. Such a sampler cannot be copied into torch.utils.data.DataLoader workers. Defaults to True; samplers whose draws depend only on the storage content and their configuration, such as RandomSampler and SliceSampler, set it to False. can_sample(storage: Storage, batch_size: int) \u2192 bool[source]# Returns whether the sampler can draw the requested batch.",
        "author": {
          "@type": "Organization",
          "name": "PyTorch Contributors",

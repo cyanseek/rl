@@ -1520,6 +1520,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBuffer.html">ReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.RateLimitedReplayBuffer.html">RateLimitedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.OfflineToOnlineReplayBuffer.html">OfflineToOnlineReplayBuffer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBufferDataset.html">ReplayBufferDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.ReplayBufferEnsemble.html">ReplayBufferEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.PrioritizedReplayBuffer.html">PrioritizedReplayBuffer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TensorDictReplayBuffer.html">TensorDictReplayBuffer</a></li>
@@ -1535,6 +1536,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TrajectoryPredicate.html">TrajectoryPredicate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.filter_trajectories.html">filter_trajectories</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.iter_trajectories.html">iter_trajectories</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.tensordict_collate.html">tensordict_collate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.find_start_stop_traj.html">find_start_stop_traj</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.TED2Flat.html">TED2Flat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.Flat2TED.html">Flat2TED</a></li>
@@ -1557,6 +1559,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.NestedStorageCheckpointer.html">NestedStorageCheckpointer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.Storage.html">Storage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageCheckpointerBase.html">StorageCheckpointerBase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageDataset.html">StorageDataset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageEnsemble.html">StorageEnsemble</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.StorageEnsembleCheckpointer.html">StorageEnsembleCheckpointer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="torchrl.data.replay_buffers.TensorStorage.html">TensorStorage</a></li>
@@ -2668,6 +2671,15 @@ as regular tensors.</p>
 <dd><p>Returns whether the selected ensemble strategy can serve a batch.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="torchrl.data.replay_buffers.SamplerEnsemble.requires_shared_state">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requires_shared_state</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#torchrl.data.replay_buffers.SamplerEnsemble.requires_shared_state" title="Link to this definition">#</a></dt>
+<dd><p>bool(x) -&gt; bool</p>
+<p>Returns True when the argument x is true, False otherwise.
+The builtins True and False are the only two instances of the class bool.
+The class bool is a subclass of the class int, and cannot be subclassed.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -2791,6 +2803,7 @@ as regular tensors.</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.SamplerEnsemble"><code class="docutils literal notranslate"><span class="pre">SamplerEnsemble</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.SamplerEnsemble.can_sample"><code class="docutils literal notranslate"><span class="pre">SamplerEnsemble.can_sample()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchrl.data.replay_buffers.SamplerEnsemble.requires_shared_state"><code class="docutils literal notranslate"><span class="pre">SamplerEnsemble.requires_shared_state</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -3045,7 +3058,7 @@ as regular tensors.</p>
        "headline": "SamplerEnsemble",
        "description": "PyTorch Documentation. Explore PyTorch, an open-source machine learning library that accelerates the path from research prototyping to production deployment.",
        "url": "/reference/generated/torchrl.data.replay_buffers.SamplerEnsemble.html",
-       "articleBody": "SamplerEnsemble# class torchrl.data.replay_buffers.SamplerEnsemble(*args, **kwargs)# An ensemble of samplers. This class is designed to work with ReplayBufferEnsemble. It contains the samplers as well as the sampling strategy hyperparameters. Parameters: samplers (sequence of Sampler) \u2013 the samplers to make the composite sampler. Keyword Arguments: p (list, tensor of probabilities, or \"sampleable\", optional) \u2013 if provided, indicates the weights of each dataset during sampling. \"sampleable\" recomputes weights from the number of records or valid slice windows currently available in each member and excludes members that cannot provide a batch. sample_from_all (bool, optional) \u2013 if True, each dataset will be sampled from. This is not compatible with the p argument. Defaults to False. num_buffer_sampled (int, optional) \u2013 the number of buffers to sample. if sample_from_all=True, this has no effect, as it defaults to the number of buffers. If sample_from_all=False, buffers will be sampled according to the probabilities p. Warning The indices provided in the info dictionary are placed in a TensorDict with keys index and buffer_ids that allow the upper ReplayBufferEnsemble and StorageEnsemble objects to retrieve the data. This format is different from with other samplers which usually return indices as regular tensors. can_sample(storage: StorageEnsemble, batch_size: int) \u2192 bool[source]# Returns whether the selected ensemble strategy can serve a batch.",
+       "articleBody": "SamplerEnsemble# class torchrl.data.replay_buffers.SamplerEnsemble(*args, **kwargs)# An ensemble of samplers. This class is designed to work with ReplayBufferEnsemble. It contains the samplers as well as the sampling strategy hyperparameters. Parameters: samplers (sequence of Sampler) \u2013 the samplers to make the composite sampler. Keyword Arguments: p (list, tensor of probabilities, or \"sampleable\", optional) \u2013 if provided, indicates the weights of each dataset during sampling. \"sampleable\" recomputes weights from the number of records or valid slice windows currently available in each member and excludes members that cannot provide a batch. sample_from_all (bool, optional) \u2013 if True, each dataset will be sampled from. This is not compatible with the p argument. Defaults to False. num_buffer_sampled (int, optional) \u2013 the number of buffers to sample. if sample_from_all=True, this has no effect, as it defaults to the number of buffers. If sample_from_all=False, buffers will be sampled according to the probabilities p. Warning The indices provided in the info dictionary are placed in a TensorDict with keys index and buffer_ids that allow the upper ReplayBufferEnsemble and StorageEnsemble objects to retrieve the data. This format is different from with other samplers which usually return indices as regular tensors. can_sample(storage: StorageEnsemble, batch_size: int) \u2192 bool[source]# Returns whether the selected ensemble strategy can serve a batch. property requires_shared_state: bool# bool(x) -\u003e bool Returns True when the argument x is true, False otherwise. The builtins True and False are the only two instances of the class bool. The class bool is a subclass of the class int, and cannot be subclassed.",
        "author": {
          "@type": "Organization",
          "name": "PyTorch Contributors",
