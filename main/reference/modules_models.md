@@ -37,6 +37,7 @@ For an overview of how the DreamerV3 components fit together, see
 | [`DreamerV3ImageEncoder`](generated/torchrl.modules.DreamerV3ImageEncoder.html#torchrl.modules.DreamerV3ImageEncoder)([in_channels, depth, ...]) | DreamerV3 convolutional image encoder. |
 | [`DreamerV3ImageDecoder`](generated/torchrl.modules.DreamerV3ImageDecoder.html#torchrl.modules.DreamerV3ImageDecoder)(in_features[, ...]) | DreamerV3 transposed-convolution image decoder. |
 | [`SimplicialNormalization`](generated/torchrl.modules.SimplicialNormalization.html#torchrl.modules.SimplicialNormalization)(dim) | Apply softmax independently to fixed-size feature simplices. |
+| [`TdMpc2QEnsemble`](generated/torchrl.modules.TdMpc2QEnsemble.html#torchrl.modules.TdMpc2QEnsemble)(*args, **kwargs) | Vectorized TD-MPC2 ensemble of distributional Q-functions. |
 
 ## PILCO
 

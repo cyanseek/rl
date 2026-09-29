@@ -1557,9 +1557,19 @@ document.write(`
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Real</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">tensordict</span> <span class="kn">import</span> <span class="n">from_modules</span><span class="p">,</span> <span class="n">NestedKey</span><span class="p">,</span> <span class="n">TensorDictBase</span>
+<span class="kn">from</span> <span class="nn">tensordict.nn</span> <span class="kn">import</span> <span class="n">TensorDictModuleBase</span><span class="p">,</span> <span class="n">TensorDictParams</span>
+
+<span class="kn">from</span> <span class="nn">..functional</span> <span class="kn">import</span> <span class="n">symexp</span>
 
 
 <div class="viewcode-block" id="SimplicialNormalization">
@@ -1671,7 +1681,304 @@ document.write(`
 
         <span class="n">entropy</span> <span class="o">=</span> <span class="o">-</span><span class="n">log_prob</span>
         <span class="n">scaled_entropy</span> <span class="o">=</span> <span class="o">-</span><span class="n">scaled_log_prob</span>
-        <span class="k">return</span> <span class="n">action</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">bounded_log_std</span><span class="p">,</span> <span class="n">entropy</span><span class="p">,</span> <span class="n">scaled_entropy</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">action</span><span class="p">,</span>
+            <span class="n">mean</span><span class="p">,</span>
+            <span class="n">bounded_log_std</span><span class="p">,</span>
+            <span class="n">entropy</span><span class="p">,</span>
+            <span class="n">scaled_entropy</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">symlog_two_hot_decode</span><span class="p">(</span>
+    <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">vmin</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">vmax</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">num_bins</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decode TD-MPC2 categorical logits into scalar values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        logits (torch.Tensor): Unnormalized categorical predictions with</span>
+<span class="sd">            categories in the final dimension.</span>
+<span class="sd">        vmin (float): Lower endpoint of the symlog-space categorical support.</span>
+<span class="sd">        vmax (float): Upper endpoint of the symlog-space categorical support.</span>
+<span class="sd">        num_bins (int): Number of categorical support points.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Decoded scalar values with a trailing singleton event dimension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">num_bins</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;num_bins must be greater than 1, got </span><span class="si">{</span><span class="n">num_bins</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vmax</span> <span class="o">&lt;=</span> <span class="n">vmin</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;vmax must be greater than vmin.&quot;</span><span class="p">)</span>
+    <span class="n">support</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+        <span class="n">vmin</span><span class="p">,</span>
+        <span class="n">vmax</span><span class="p">,</span>
+        <span class="n">num_bins</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">support</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">symexp</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_normalize_tdmpc2_key</span><span class="p">(</span><span class="n">key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NestedKey</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">key</span>
+
+
+<div class="viewcode-block" id="TdMpc2QEnsemble">
+<a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.TdMpc2QEnsemble.html#torchrl.modules.TdMpc2QEnsemble">[docs]</a>
+<span class="k">class</span> <span class="nc">TdMpc2QEnsemble</span><span class="p">(</span><span class="n">TensorDictModuleBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Vectorized TD-MPC2 ensemble of distributional Q-functions.</span>
+
+<span class="sd">    Each Q-function receives the concatenation of a latent state and an action</span>
+<span class="sd">    and returns logits for a scalar categorical representation. The ensemble</span>
+<span class="sd">    dimension is exposed immediately before the category dimension.</span>
+
+<span class="sd">    :meth:`forward` returns the logits of every Q-function. :meth:`reduce`</span>
+<span class="sd">    follows TD-MPC2&#39;s value-estimation rule by selecting two Q-functions at</span>
+<span class="sd">    random, decoding their logits, and taking either their minimum or average.</span>
+<span class="sd">    Online, detached, and target parameter sources are available for both</span>
+<span class="sd">    operations.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        q_networks: Sequence of identically shaped single-network Q-functions.</span>
+<span class="sd">        num_bins: Number of categorical bins. Must be greater than 1.</span>
+<span class="sd">        vmin: Minimum value of the symlog-space categorical support.</span>
+<span class="sd">        vmax: Maximum value of the symlog-space categorical support.</span>
+<span class="sd">        in_keys: Two TensorDict keys for the latent state and action.</span>
+<span class="sd">            Defaults to ``[&quot;latent&quot;, &quot;action&quot;]``.</span>
+<span class="sd">        out_keys: One TensorDict key for the ensemble logits. Defaults to</span>
+<span class="sd">            ``[&quot;q_logits&quot;]``.</span>
+<span class="sd">        q_value_key: TensorDict key written by :meth:`reduce`. Defaults to</span>
+<span class="sd">            ``&quot;q_value&quot;``.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt; from tensordict import TensorDict</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules import MLP</span>
+<span class="sd">        &gt;&gt;&gt; from torchrl.modules.models.tdmpc2 import TdMpc2QEnsemble</span>
+<span class="sd">        &gt;&gt;&gt; q_networks = [</span>
+<span class="sd">        ...     MLP(in_features=6, out_features=5, depth=2, num_cells=8)</span>
+<span class="sd">        ...     for _ in range(5)</span>
+<span class="sd">        ... ]</span>
+<span class="sd">        &gt;&gt;&gt; q_ensemble = TdMpc2QEnsemble(</span>
+<span class="sd">        ...     q_networks, num_bins=5, vmin=-10.0, vmax=10.0</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; data = TensorDict(</span>
+<span class="sd">        ...     {&quot;latent&quot;: torch.randn(4, 4), &quot;action&quot;: torch.randn(4, 2)},</span>
+<span class="sd">        ...     batch_size=[4],</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; data = q_ensemble(data)</span>
+<span class="sd">        &gt;&gt;&gt; data[&quot;q_logits&quot;].shape</span>
+<span class="sd">        torch.Size([4, 5, 5])</span>
+<span class="sd">        &gt;&gt;&gt; q_ensemble.reduce(data, reduction=&quot;min&quot;)[&quot;q_value&quot;].shape</span>
+<span class="sd">        torch.Size([4, 1])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">q_networks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">num_bins</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">vmin</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">vmax</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">in_keys</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">out_keys</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">NestedKey</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">q_value_key</span><span class="p">:</span> <span class="n">NestedKey</span> <span class="o">=</span> <span class="s2">&quot;q_value&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">q_networks</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">q_networks</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_networks</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;TdMpc2QEnsemble requires at least two Q-networks.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_bins</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_bins must be greater than 1.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vmax</span> <span class="o">&lt;=</span> <span class="n">vmin</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;vmax must be greater than vmin.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;latent&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">in_keys</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">_normalize_tdmpc2_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">in_keys</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_keys</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;q_logits&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">out_keys</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">_normalize_tdmpc2_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">out_keys</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;TdMpc2QEnsemble requires exactly two input keys.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_keys</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;TdMpc2QEnsemble requires exactly one output key.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;TdMpc2QEnsemble input keys must be distinct.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The output key must be distinct from the input keys.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">q_value_key</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">q_value_key</span> <span class="o">=</span> <span class="n">_normalize_tdmpc2_key</span><span class="p">(</span><span class="n">q_value_key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_value_key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">q_value_key</span> <span class="o">=</span> <span class="n">q_value_key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">q_value_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span> <span class="ow">or</span> <span class="n">q_value_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_keys</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;q_value_key must be distinct from the input and output keys.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_q</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">q_networks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span> <span class="o">=</span> <span class="n">num_bins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span> <span class="o">=</span> <span class="n">vmin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span> <span class="o">=</span> <span class="n">vmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_value_key</span> <span class="o">=</span> <span class="n">q_value_key</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_params</span> <span class="o">=</span> <span class="n">from_modules</span><span class="p">(</span><span class="o">*</span><span class="n">q_networks</span><span class="p">,</span> <span class="n">as_module</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_q_params</span> <span class="o">=</span> <span class="n">TensorDictParams</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">q_params</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">clone</span><span class="p">(),</span> <span class="n">no_convert</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;meta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="n">q_networks</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">q_template</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">q_networks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">target_q_template</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">q_networks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_q_template&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">q_template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_target_q_template&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_q_template</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q_template</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_q_template</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_call</span><span class="p">(</span>
+        <span class="n">params</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
+        <span class="n">module</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">params</span><span class="o">.</span><span class="n">to_module</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">preserve_module_state</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">module</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_source</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;online&quot;</span><span class="p">,</span> <span class="s2">&quot;detached&quot;</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">TensorDictBase</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;online&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q_template</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;detached&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_params</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q_template</span>
+        <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;target&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_q_params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_q_template</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;source must be one of &#39;online&#39;, &#39;detached&#39;, or &#39;target&#39;, got </span><span class="si">{</span><span class="n">source</span><span class="si">!r}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_q_logits</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">latent</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">action</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;online&quot;</span><span class="p">,</span> <span class="s2">&quot;detached&quot;</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">params</span><span class="p">,</span> <span class="n">module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">latent</span><span class="p">,</span> <span class="n">action</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">vmap</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_call</span><span class="p">,</span>
+            <span class="n">in_dims</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">randomness</span><span class="o">=</span><span class="s2">&quot;different&quot;</span><span class="p">,</span>
+        <span class="p">)(</span><span class="n">params</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tensordict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing TD-MPC2 Q ensemble input keys: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="TdMpc2QEnsemble.forward">
+<a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.TdMpc2QEnsemble.html#torchrl.modules.TdMpc2QEnsemble.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;online&quot;</span><span class="p">,</span> <span class="s2">&quot;detached&quot;</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;online&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the logits of all Q-functions to the input TensorDict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensordict: TensorDict containing the latent state and action.</span>
+<span class="sd">            source: Parameter source used for the Q-functions. Defaults to</span>
+<span class="sd">                ``&quot;online&quot;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">latent</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q_logits</span><span class="p">(</span><span class="n">latent</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_keys_source</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">logits</span><span class="o">.</span><span class="n">movedim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">tensordict</span></div>
+
+
+<div class="viewcode-block" id="TdMpc2QEnsemble.reduce">
+<a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.TdMpc2QEnsemble.html#torchrl.modules.TdMpc2QEnsemble.reduce">[docs]</a>
+    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tensordict</span><span class="p">:</span> <span class="n">TensorDictBase</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">reduction</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;avg&quot;</span><span class="p">],</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;online&quot;</span><span class="p">,</span> <span class="s2">&quot;detached&quot;</span><span class="p">,</span> <span class="s2">&quot;target&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;online&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorDictBase</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a TD-MPC2 two-Q value reduction to the input TensorDict.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tensordict: TensorDict containing the latent state and action.</span>
+<span class="sd">            reduction: Either ``&quot;min&quot;`` or ``&quot;avg&quot;`` for the two sampled</span>
+<span class="sd">                Q-functions.</span>
+<span class="sd">            source: Parameter source used for the Q-functions. Defaults to</span>
+<span class="sd">                ``&quot;online&quot;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">reduction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="s2">&quot;avg&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;reduction must be either &#39;min&#39; or &#39;avg&#39;, got </span><span class="si">{</span><span class="n">reduction</span><span class="si">!r}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">latent</span><span class="p">,</span> <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">(</span><span class="n">tensordict</span><span class="p">)</span>
+        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q_logits</span><span class="p">(</span><span class="n">latent</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+        <span class="n">qidx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_q</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">symlog_two_hot_decode</span><span class="p">(</span>
+            <span class="n">logits</span><span class="p">[</span><span class="n">qidx</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmin</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vmax</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_bins</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span>
+            <span class="n">q_value</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">q_value</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">tensordict</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q_value_key</span><span class="p">,</span> <span class="n">q_value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tensordict</span></div>
+
+
+<div class="viewcode-block" id="TdMpc2QEnsemble.soft_update_target">
+<a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.TdMpc2QEnsemble.html#torchrl.modules.TdMpc2QEnsemble.soft_update_target">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">soft_update_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tau</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update target Q-function buffers by Polyak averaging.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            tau: Interpolation factor in ``[0, 1]``. A value of ``0`` keeps</span>
+<span class="sd">                the target unchanged and a value of ``1`` copies the online</span>
+<span class="sd">                parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">tau</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tau must be a finite value in [0, 1], got </span><span class="si">{</span><span class="n">tau</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_q_params</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">q_params</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">or</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_complex</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+                <span class="n">target</span><span class="o">.</span><span class="n">lerp_</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">tau</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">target</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">source</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TdMpc2QEnsemble.train">
+<a class="viewcode-back" href="../../../../reference/generated/torchrl.modules.TdMpc2QEnsemble.html#torchrl.modules.TdMpc2QEnsemble.train">[docs]</a>
+    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set training mode while keeping the target Q-functions in eval mode.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q_template</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_q_template</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
 </pre></div>
 
                 </article>
@@ -1934,7 +2241,7 @@ document.write(`
        "headline": "torchrl.modules.models.tdmpc2",
        "description": "PyTorch Documentation. Explore PyTorch, an open-source machine learning library that accelerates the path from research prototyping to production deployment.",
        "url": "/_modules/torchrl/modules/models/tdmpc2.html",
-       "articleBody": "Source code for torchrl.modules.models.tdmpc2 # Copyright (c) Meta Platforms, Inc. and affiliates. # # This source code is licensed under the MIT license found in the # LICENSE file in the root directory of this source tree. from __future__ import annotations import torch import torch.nn as nn import torch.nn.functional as F [docs] class SimplicialNormalization(nn.Module): \"\"\"Apply softmax independently to fixed-size feature simplices. Args: dim (int): Number of features in each simplex. The last input dimension must be divisible by ``dim``. \"\"\" def __init__(self, dim: int): super().__init__() if isinstance(dim, bool) or not isinstance(dim, int) or dim \u003c= 0: raise ValueError(f\"dim must be a positive integer, got {dim!r}.\") self.dim = dim [docs] def forward(self, x: torch.Tensor) -\u003e torch.Tensor: \"\"\"Normalize the last dimension of ``x`` in groups of ``dim``.\"\"\" if x.shape[-1] % self.dim: raise ValueError( f\"The last input dimension must be divisible by dim={self.dim}, \" f\"got {x.shape[-1]}.\" ) shape = x.shape x = x.reshape(*shape[:-1], -1, self.dim) x = F.softmax(x, dim=-1) return x.reshape(shape) def log_std( x: torch.Tensor, low: torch.Tensor | float, dif: torch.Tensor | float, ) -\u003e torch.Tensor: \"\"\"Map unconstrained values to a bounded log-standard deviation. Args: x (torch.Tensor): Unconstrained values. low (torch.Tensor or float): Lower bound of the output interval. dif (torch.Tensor or float): Width of the output interval. Returns: A tensor with values in ``[low, low + dif]``. \"\"\" return low + 0.5 * dif * (torch.tanh(x) + 1) def gaussian_logprob(eps: torch.Tensor, log_std: torch.Tensor) -\u003e torch.Tensor: \"\"\"Compute the log probability of diagonal Gaussian samples. Args: eps (torch.Tensor): Gaussian noise samples. log_std (torch.Tensor): Log standard deviations for each action. Returns: The summed log probability with a trailing singleton event dimension. \"\"\" return (-0.5 * eps.pow(2) - log_std - 0.9189385175704956).sum(-1, keepdim=True) def _squash( mu: torch.Tensor, pi: torch.Tensor, log_pi: torch.Tensor, ) -\u003e tuple[torch.Tensor, torch.Tensor, torch.Tensor]: \"\"\"Squash policy locations and samples while correcting log probability.\"\"\" mu = torch.tanh(mu) pi = torch.tanh(pi) squashed_pi = torch.log(F.relu(1 - pi.pow(2)) + 1e-6) log_pi = log_pi - squashed_pi.sum(-1, keepdim=True) return mu, pi, log_pi class _TdMpc2PolicyPrior(nn.Module): \"\"\"Sample actions from the TD-MPC2 policy prior.\"\"\" def __init__( self, network: nn.Module, log_std_min: float, log_std_max: float, device: torch.device | str | None = None, ): super().__init__() self.network = network self.register_buffer(\"log_std_min\", torch.tensor(log_std_min, device=device)) self.register_buffer( \"log_std_dif\", torch.tensor(log_std_max, device=device) - self.log_std_min, ) def forward( self, latent: torch.Tensor ) -\u003e tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]: mean, raw_log_std = self.network(latent).chunk(2, dim=-1) bounded_log_std = log_std(raw_log_std, self.log_std_min, self.log_std_dif) eps = torch.randn_like(mean) log_prob = gaussian_logprob(eps, bounded_log_std) scaled_log_prob = log_prob * eps.shape[-1] action = mean + eps * bounded_log_std.exp() mean, action, log_prob = _squash(mean, action, log_prob) entropy = -log_prob scaled_entropy = -scaled_log_prob return action, mean, bounded_log_std, entropy, scaled_entropy",
+       "articleBody": "Source code for torchrl.modules.models.tdmpc2 # Copyright (c) Meta Platforms, Inc. and affiliates. # # This source code is licensed under the MIT license found in the # LICENSE file in the root directory of this source tree. from __future__ import annotations import math from collections.abc import Sequence from copy import deepcopy from numbers import Real from typing import Literal import torch import torch.nn as nn import torch.nn.functional as F from tensordict import from_modules, NestedKey, TensorDictBase from tensordict.nn import TensorDictModuleBase, TensorDictParams from ..functional import symexp [docs] class SimplicialNormalization(nn.Module): \"\"\"Apply softmax independently to fixed-size feature simplices. Args: dim (int): Number of features in each simplex. The last input dimension must be divisible by ``dim``. \"\"\" def __init__(self, dim: int): super().__init__() if isinstance(dim, bool) or not isinstance(dim, int) or dim \u003c= 0: raise ValueError(f\"dim must be a positive integer, got {dim!r}.\") self.dim = dim [docs] def forward(self, x: torch.Tensor) -\u003e torch.Tensor: \"\"\"Normalize the last dimension of ``x`` in groups of ``dim``.\"\"\" if x.shape[-1] % self.dim: raise ValueError( f\"The last input dimension must be divisible by dim={self.dim}, \" f\"got {x.shape[-1]}.\" ) shape = x.shape x = x.reshape(*shape[:-1], -1, self.dim) x = F.softmax(x, dim=-1) return x.reshape(shape) def log_std( x: torch.Tensor, low: torch.Tensor | float, dif: torch.Tensor | float, ) -\u003e torch.Tensor: \"\"\"Map unconstrained values to a bounded log-standard deviation. Args: x (torch.Tensor): Unconstrained values. low (torch.Tensor or float): Lower bound of the output interval. dif (torch.Tensor or float): Width of the output interval. Returns: A tensor with values in ``[low, low + dif]``. \"\"\" return low + 0.5 * dif * (torch.tanh(x) + 1) def gaussian_logprob(eps: torch.Tensor, log_std: torch.Tensor) -\u003e torch.Tensor: \"\"\"Compute the log probability of diagonal Gaussian samples. Args: eps (torch.Tensor): Gaussian noise samples. log_std (torch.Tensor): Log standard deviations for each action. Returns: The summed log probability with a trailing singleton event dimension. \"\"\" return (-0.5 * eps.pow(2) - log_std - 0.9189385175704956).sum(-1, keepdim=True) def _squash( mu: torch.Tensor, pi: torch.Tensor, log_pi: torch.Tensor, ) -\u003e tuple[torch.Tensor, torch.Tensor, torch.Tensor]: \"\"\"Squash policy locations and samples while correcting log probability.\"\"\" mu = torch.tanh(mu) pi = torch.tanh(pi) squashed_pi = torch.log(F.relu(1 - pi.pow(2)) + 1e-6) log_pi = log_pi - squashed_pi.sum(-1, keepdim=True) return mu, pi, log_pi class _TdMpc2PolicyPrior(nn.Module): \"\"\"Sample actions from the TD-MPC2 policy prior.\"\"\" def __init__( self, network: nn.Module, log_std_min: float, log_std_max: float, device: torch.device | str | None = None, ): super().__init__() self.network = network self.register_buffer(\"log_std_min\", torch.tensor(log_std_min, device=device)) self.register_buffer( \"log_std_dif\", torch.tensor(log_std_max, device=device) - self.log_std_min, ) def forward( self, latent: torch.Tensor ) -\u003e tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]: mean, raw_log_std = self.network(latent).chunk(2, dim=-1) bounded_log_std = log_std(raw_log_std, self.log_std_min, self.log_std_dif) eps = torch.randn_like(mean) log_prob = gaussian_logprob(eps, bounded_log_std) scaled_log_prob = log_prob * eps.shape[-1] action = mean + eps * bounded_log_std.exp() mean, action, log_prob = _squash(mean, action, log_prob) entropy = -log_prob scaled_entropy = -scaled_log_prob return ( action, mean, bounded_log_std, entropy, scaled_entropy, ) def symlog_two_hot_decode( logits: torch.Tensor, vmin: float, vmax: float, num_bins: int, ) -\u003e torch.Tensor: \"\"\"Decode TD-MPC2 categorical logits into scalar values. Args: logits (torch.Tensor): Unnormalized categorical predictions with categories in the final dimension. vmin (float): Lower endpoint of the symlog-space categorical support. vmax (float): Upper endpoint of the symlog-space categorical support. num_bins (int): Number of categorical support points. Returns: Decoded scalar values with a trailing singleton event dimension. \"\"\" if num_bins \u003c= 1: raise ValueError(f\"num_bins must be greater than 1, got {num_bins}.\") if vmax \u003c= vmin: raise ValueError(\"vmax must be greater than vmin.\") support = torch.linspace( vmin, vmax, num_bins, dtype=logits.dtype, device=logits.device, ) value = (torch.softmax(logits, dim=-1) * support).sum(-1, keepdim=True) return symexp(value) def _normalize_tdmpc2_key(key: NestedKey | list[str]) -\u003e NestedKey: if isinstance(key, list): return tuple(key) return key [docs] class TdMpc2QEnsemble(TensorDictModuleBase): \"\"\"Vectorized TD-MPC2 ensemble of distributional Q-functions. Each Q-function receives the concatenation of a latent state and an action and returns logits for a scalar categorical representation. The ensemble dimension is exposed immediately before the category dimension. :meth:`forward` returns the logits of every Q-function. :meth:`reduce` follows TD-MPC2\u0027s value-estimation rule by selecting two Q-functions at random, decoding their logits, and taking either their minimum or average. Online, detached, and target parameter sources are available for both operations. Args: q_networks: Sequence of identically shaped single-network Q-functions. num_bins: Number of categorical bins. Must be greater than 1. vmin: Minimum value of the symlog-space categorical support. vmax: Maximum value of the symlog-space categorical support. in_keys: Two TensorDict keys for the latent state and action. Defaults to ``[\"latent\", \"action\"]``. out_keys: One TensorDict key for the ensemble logits. Defaults to ``[\"q_logits\"]``. q_value_key: TensorDict key written by :meth:`reduce`. Defaults to ``\"q_value\"``. Examples: \u003e\u003e\u003e import torch \u003e\u003e\u003e from tensordict import TensorDict \u003e\u003e\u003e from torchrl.modules import MLP \u003e\u003e\u003e from torchrl.modules.models.tdmpc2 import TdMpc2QEnsemble \u003e\u003e\u003e q_networks = [ ... MLP(in_features=6, out_features=5, depth=2, num_cells=8) ... for _ in range(5) ... ] \u003e\u003e\u003e q_ensemble = TdMpc2QEnsemble( ... q_networks, num_bins=5, vmin=-10.0, vmax=10.0 ... ) \u003e\u003e\u003e data = TensorDict( ... {\"latent\": torch.randn(4, 4), \"action\": torch.randn(4, 2)}, ... batch_size=[4], ... ) \u003e\u003e\u003e data = q_ensemble(data) \u003e\u003e\u003e data[\"q_logits\"].shape torch.Size([4, 5, 5]) \u003e\u003e\u003e q_ensemble.reduce(data, reduction=\"min\")[\"q_value\"].shape torch.Size([4, 1]) \"\"\" def __init__( self, q_networks: Sequence[nn.Module], *, num_bins: int, vmin: float, vmax: float, in_keys: Sequence[NestedKey] | None = None, out_keys: Sequence[NestedKey] | None = None, q_value_key: NestedKey = \"q_value\", ) -\u003e None: super().__init__() q_networks = tuple(q_networks) if len(q_networks) \u003c 2: raise ValueError(\"TdMpc2QEnsemble requires at least two Q-networks.\") if num_bins \u003c= 1: raise ValueError(\"num_bins must be greater than 1.\") if vmax \u003c= vmin: raise ValueError(\"vmax must be greater than vmin.\") self.in_keys = ( [\"latent\", \"action\"] if in_keys is None else [_normalize_tdmpc2_key(key) for key in in_keys] ) self.out_keys = ( [\"q_logits\"] if out_keys is None else [_normalize_tdmpc2_key(key) for key in out_keys] ) if len(self.in_keys) != 2: raise ValueError(\"TdMpc2QEnsemble requires exactly two input keys.\") if len(self.out_keys) != 1: raise ValueError(\"TdMpc2QEnsemble requires exactly one output key.\") if len(set(self.in_keys)) != 2: raise ValueError(\"TdMpc2QEnsemble input keys must be distinct.\") if self.out_keys[0] in self.in_keys: raise ValueError(\"The output key must be distinct from the input keys.\") if isinstance(q_value_key, list): q_value_key = _normalize_tdmpc2_key(q_value_key) if len(q_value_key) == 1: q_value_key = q_value_key[0] if q_value_key in self.in_keys or q_value_key in self.out_keys: raise ValueError( \"q_value_key must be distinct from the input and output keys.\" ) self.num_q = len(q_networks) self.num_bins = num_bins self.vmin = vmin self.vmax = vmax self.q_value_key = q_value_key self.q_params = from_modules(*q_networks, as_module=True) self.target_q_params = TensorDictParams( self.q_params.data.clone(), no_convert=True ) with self.q_params[0].data.to(\"meta\").to_module(q_networks[0]): q_template = deepcopy(q_networks[0]) target_q_template = deepcopy(q_networks[0]) self.__dict__[\"_q_template\"] = q_template self.__dict__[\"_target_q_template\"] = target_q_template self._q_template.train(self.training) self._target_q_template.train(False) @staticmethod def _call( params: TensorDictBase, module: nn.Module, inputs: torch.Tensor, ) -\u003e torch.Tensor: with params.to_module(module, preserve_module_state=False): return module(inputs) def _source( self, source: Literal[\"online\", \"detached\", \"target\"] ) -\u003e tuple[TensorDictBase, nn.Module]: if source == \"online\": return self.q_params, self._q_template if source == \"detached\": return self.q_params.detach(), self._q_template if source == \"target\": return self.target_q_params, self._target_q_template raise ValueError( f\"source must be one of \u0027online\u0027, \u0027detached\u0027, or \u0027target\u0027, got {source!r}.\" ) def _q_logits( self, latent: torch.Tensor, action: torch.Tensor, source: Literal[\"online\", \"detached\", \"target\"], ) -\u003e torch.Tensor: params, module = self._source(source) inputs = torch.cat((latent, action), dim=-1) return torch.vmap( self._call, in_dims=(0, None, None), randomness=\"different\", )(params, module, inputs) def _inputs(self, tensordict: TensorDictBase) -\u003e tuple[torch.Tensor, torch.Tensor]: values = tuple(tensordict.get(key) for key in self.in_keys) if any(value is None for value in values): missing = [key for key, value in zip(self.in_keys, values) if value is None] raise KeyError(f\"Missing TD-MPC2 Q ensemble input keys: {missing}\") return values[0], values[1] [docs] def forward( self, tensordict: TensorDictBase, *, source: Literal[\"online\", \"detached\", \"target\"] = \"online\", ) -\u003e TensorDictBase: \"\"\"Write the logits of all Q-functions to the input TensorDict. Args: tensordict: TensorDict containing the latent state and action. source: Parameter source used for the Q-functions. Defaults to ``\"online\"``. \"\"\" latent, action = self._inputs(tensordict) logits = self._q_logits(latent, action, source) tensordict.set(self.out_keys_source[0], logits.movedim(0, -2)) return tensordict [docs] def reduce( self, tensordict: TensorDictBase, *, reduction: Literal[\"min\", \"avg\"], source: Literal[\"online\", \"detached\", \"target\"] = \"online\", ) -\u003e TensorDictBase: \"\"\"Write a TD-MPC2 two-Q value reduction to the input TensorDict. Args: tensordict: TensorDict containing the latent state and action. reduction: Either ``\"min\"`` or ``\"avg\"`` for the two sampled Q-functions. source: Parameter source used for the Q-functions. Defaults to ``\"online\"``. \"\"\" if reduction not in {\"min\", \"avg\"}: raise ValueError( f\"reduction must be either \u0027min\u0027 or \u0027avg\u0027, got {reduction!r}.\" ) latent, action = self._inputs(tensordict) logits = self._q_logits(latent, action, source) qidx = torch.randperm(self.num_q, device=logits.device)[:2] values = symlog_two_hot_decode( logits[qidx], self.vmin, self.vmax, self.num_bins, ) if reduction == \"min\": q_value = values.min(dim=0).values else: q_value = values.sum(dim=0) / 2 tensordict.set(self.q_value_key, q_value) return tensordict [docs] @torch.no_grad() def soft_update_target(self, tau: float) -\u003e None: \"\"\"Update target Q-function buffers by Polyak averaging. Args: tau: Interpolation factor in ``[0, 1]``. A value of ``0`` keeps the target unchanged and a value of ``1`` copies the online parameters. \"\"\" if not isinstance(tau, Real) or not math.isfinite(tau) or not 0 \u003c= tau \u003c= 1: raise ValueError(f\"tau must be a finite value in [0, 1], got {tau!r}.\") for key, target in self.target_q_params.data.items(True, True): source = self.q_params.data.get(key) if torch.is_floating_point(target) or torch.is_complex(target): target.lerp_(source, tau) else: target.copy_(source) [docs] def train(self, mode: bool = True): \"\"\"Set training mode while keeping the target Q-functions in eval mode.\"\"\" super().train(mode) self._q_template.train(mode) self._target_q_template.train(False) return self",
        "author": {
          "@type": "Organization",
          "name": "PyTorch Contributors",
