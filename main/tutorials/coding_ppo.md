@@ -808,26 +808,26 @@ for i, tensordict_data in enumerate(collector):
 
 ```
 0%| | 0/10000 [00:00<?, ?it/s]
- 10%|█ | 1000/10000 [00:02<00:20, 435.75it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.0793 (init= 9.0793), step count (max): 12, lr policy: 0.0003: 10%|█ | 1000/10000 [00:02<00:20, 435.75it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.0793 (init= 9.0793), step count (max): 12, lr policy: 0.0003: 20%|██ | 2000/10000 [00:04<00:18, 441.57it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.1118 (init= 9.0793), step count (max): 15, lr policy: 0.0003: 20%|██ | 2000/10000 [00:04<00:18, 441.57it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.1118 (init= 9.0793), step count (max): 15, lr policy: 0.0003: 30%|███ | 3000/10000 [00:06<00:15, 441.58it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.1440 (init= 9.0793), step count (max): 21, lr policy: 0.0003: 30%|███ | 3000/10000 [00:06<00:15, 441.58it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.1440 (init= 9.0793), step count (max): 21, lr policy: 0.0003: 40%|████ | 4000/10000 [00:09<00:13, 445.06it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.1830 (init= 9.0793), step count (max): 19, lr policy: 0.0002: 40%|████ | 4000/10000 [00:09<00:13, 445.06it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.1830 (init= 9.0793), step count (max): 19, lr policy: 0.0002: 50%|█████ | 5000/10000 [00:11<00:11, 447.06it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2025 (init= 9.0793), step count (max): 25, lr policy: 0.0002: 50%|█████ | 5000/10000 [00:11<00:11, 447.06it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2025 (init= 9.0793), step count (max): 25, lr policy: 0.0002: 60%|██████ | 6000/10000 [00:13<00:08, 448.54it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2227 (init= 9.0793), step count (max): 26, lr policy: 0.0001: 60%|██████ | 6000/10000 [00:13<00:08, 448.54it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2227 (init= 9.0793), step count (max): 26, lr policy: 0.0001: 70%|███████ | 7000/10000 [00:15<00:06, 449.74it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2289 (init= 9.0793), step count (max): 30, lr policy: 0.0001: 70%|███████ | 7000/10000 [00:15<00:06, 449.74it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2289 (init= 9.0793), step count (max): 30, lr policy: 0.0001: 80%|████████ | 8000/10000 [00:17<00:04, 451.22it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2404 (init= 9.0793), step count (max): 38, lr policy: 0.0001: 80%|████████ | 8000/10000 [00:17<00:04, 451.22it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2404 (init= 9.0793), step count (max): 38, lr policy: 0.0001: 90%|█████████ | 9000/10000 [00:20<00:02, 452.23it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2417 (init= 9.0793), step count (max): 35, lr policy: 0.0000: 90%|█████████ | 9000/10000 [00:20<00:02, 452.23it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2417 (init= 9.0793), step count (max): 35, lr policy: 0.0000: 100%|██████████| 10000/10000 [00:22<00:00, 453.41it/s]
-eval cumulative reward: 91.4470 (init: 91.4470), eval step-count: 9, average reward= 9.2467 (init= 9.0793), step count (max): 46, lr policy: 0.0000: 100%|██████████| 10000/10000 [00:22<00:00, 453.41it/s]
+ 10%|█ | 1000/10000 [00:02<00:20, 443.43it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.0931 (init= 9.0931), step count (max): 14, lr policy: 0.0003: 10%|█ | 1000/10000 [00:02<00:20, 443.43it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.0931 (init= 9.0931), step count (max): 14, lr policy: 0.0003: 20%|██ | 2000/10000 [00:04<00:17, 444.97it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.1316 (init= 9.0931), step count (max): 15, lr policy: 0.0003: 20%|██ | 2000/10000 [00:04<00:17, 444.97it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.1316 (init= 9.0931), step count (max): 15, lr policy: 0.0003: 30%|███ | 3000/10000 [00:06<00:15, 447.77it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.1536 (init= 9.0931), step count (max): 25, lr policy: 0.0003: 30%|███ | 3000/10000 [00:06<00:15, 447.77it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.1536 (init= 9.0931), step count (max): 25, lr policy: 0.0003: 40%|████ | 4000/10000 [00:08<00:13, 449.78it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.1939 (init= 9.0931), step count (max): 22, lr policy: 0.0002: 40%|████ | 4000/10000 [00:08<00:13, 449.78it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.1939 (init= 9.0931), step count (max): 22, lr policy: 0.0002: 50%|█████ | 5000/10000 [00:11<00:11, 449.88it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2091 (init= 9.0931), step count (max): 23, lr policy: 0.0002: 50%|█████ | 5000/10000 [00:11<00:11, 449.88it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2091 (init= 9.0931), step count (max): 23, lr policy: 0.0002: 60%|██████ | 6000/10000 [00:13<00:08, 448.07it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2095 (init= 9.0931), step count (max): 28, lr policy: 0.0001: 60%|██████ | 6000/10000 [00:13<00:08, 448.07it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2095 (init= 9.0931), step count (max): 28, lr policy: 0.0001: 70%|███████ | 7000/10000 [00:15<00:06, 449.50it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2399 (init= 9.0931), step count (max): 43, lr policy: 0.0001: 70%|███████ | 7000/10000 [00:15<00:06, 449.50it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2399 (init= 9.0931), step count (max): 43, lr policy: 0.0001: 80%|████████ | 8000/10000 [00:17<00:04, 449.42it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2425 (init= 9.0931), step count (max): 34, lr policy: 0.0001: 80%|████████ | 8000/10000 [00:17<00:04, 449.42it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2425 (init= 9.0931), step count (max): 34, lr policy: 0.0001: 90%|█████████ | 9000/10000 [00:20<00:02, 450.84it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2566 (init= 9.0931), step count (max): 48, lr policy: 0.0000: 90%|█████████ | 9000/10000 [00:20<00:02, 450.84it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2566 (init= 9.0931), step count (max): 48, lr policy: 0.0000: 100%|██████████| 10000/10000 [00:22<00:00, 451.92it/s]
+eval cumulative reward: 120.4017 (init: 120.4017), eval step-count: 12, average reward= 9.2587 (init= 9.0931), step count (max): 43, lr policy: 0.0000: 100%|██████████| 10000/10000 [00:22<00:00, 451.92it/s]
 ```
 
 ## Results
@@ -873,7 +873,7 @@ the environment after asking for rendering to get a visual rendering of the
 inverted pendulum in action. Check `torchrl.record` to
 know more.
 
-**Total running time of the script:** (0 minutes 23.131 seconds)
+**Total running time of the script:** (0 minutes 23.110 seconds)
 
 [`Download Jupyter notebook: coding_ppo.ipynb`](../_downloads/e2a5193e019585d9cfa26d3eebfd8be3/coding_ppo.ipynb)
 

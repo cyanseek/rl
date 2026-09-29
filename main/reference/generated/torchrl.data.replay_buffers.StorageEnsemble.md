@@ -26,6 +26,10 @@ This class does not support writing (similarly to [`WriterEnsemble`](torchrl.dat
 To extend one of the replay buffers, simply index the parent
 [`ReplayBufferEnsemble`](torchrl.data.ReplayBufferEnsemble.html#torchrl.data.ReplayBufferEnsemble) object.
 
+See also
+
+[`StorageEnsembleConfig`](torchrl.trainers.algorithms.configs.data.StorageEnsembleConfig.html#torchrl.trainers.algorithms.configs.data.StorageEnsembleConfig)
+
 as_dataset()[[source]](../../_modules/torchrl/data/replay_buffers/storages/ensemble.html#StorageEnsemble.as_dataset)
 
 Returns a map-style [`torch.utils.data.Dataset`](https://docs.pytorch.org/docs/stable/data.html#torch.utils.data.Dataset) reading this storage.

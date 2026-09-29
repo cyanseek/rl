@@ -33,6 +33,10 @@ and `StorageEnsemble` objects to retrieve the data.
 This format is different from with other samplers which usually return indices
 as regular tensors.
 
+See also
+
+`SamplerEnsembleConfig`
+
 can_sample(*storage: [StorageEnsemble](torchrl.data.replay_buffers.StorageEnsemble.html#torchrl.data.replay_buffers.StorageEnsemble)*, *batch_size: int*) → bool[[source]](../../_modules/torchrl/data/replay_buffers/samplers/ensemble.html#SamplerEnsemble.can_sample)
 
 Returns whether the selected ensemble strategy can serve a batch.
