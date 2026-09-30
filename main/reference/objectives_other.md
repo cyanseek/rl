@@ -13,6 +13,7 @@ Additional loss modules for specialized algorithms.
 | [`DreamerModelLoss`](generated/torchrl.objectives.DreamerModelLoss.html#torchrl.objectives.DreamerModelLoss)(*args, **kwargs) | Dreamer Model Loss. |
 | [`DreamerValueLoss`](generated/torchrl.objectives.DreamerValueLoss.html#torchrl.objectives.DreamerValueLoss)(*args, **kwargs) | Dreamer Value Loss. |
 | [`WorldModelLoss`](generated/torchrl.objectives.WorldModelLoss.html#torchrl.objectives.WorldModelLoss)(*args, **kwargs) | A general loss module for model-based world models. |
+| [`TdMpc2Loss`](generated/torchrl.objectives.TdMpc2Loss.html#torchrl.objectives.TdMpc2Loss)(*args, **kwargs) | Compute the TD-MPC2 model-learning objective. |
 | [`ExponentialQuadraticCost`](generated/torchrl.objectives.ExponentialQuadraticCost.html#torchrl.objectives.ExponentialQuadraticCost)(*args, **kwargs) | Computes the expected saturating cost for a Gaussian-distributed state. |
 | [`RNDLoss`](generated/torchrl.objectives.RNDLoss.html#torchrl.objectives.RNDLoss)(*args, **kwargs) | Loss module for training the predictor network in Random Network Distillation. |
 
