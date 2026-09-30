@@ -37048,7 +37048,7 @@ Proxy to `zero()`.
 
 # Trajectory
 
-*class*torchrl.data.Trajectory(*data: 'TensorDictBase' = <property object at 0x7f4777a63150>*, ***, *batch_size*, *device=None*, *names=None*)[[source]](../../_modules/torchrl/data/replay_buffers/query.html#Trajectory)
+*class*torchrl.data.Trajectory(*data: 'TensorDictBase' = <property object at 0x7f9c230fd120>*, ***, *batch_size*, *device=None*, *names=None*)[[source]](../../_modules/torchrl/data/replay_buffers/query.html#Trajectory)
 
 cat(*dim: int = 0*, ***, *out=None*)
 
@@ -51076,7 +51076,7 @@ Yields:
 
 # ContentBase
 
-*class*torchrl.data.llm.ContentBase(*type: "Literal['text'*, *'image'*, *'audio'*, *'video'*, *'file'*, *'function_call']" = <function _wrap_td_method.<locals>.wrapped_func at 0x7f477a7aa340>*, *text: 'str | None' = None*, *url: 'str | None' = None*, *data: 'str | None' = None*, *mime_type: 'str | None' = None*, *name: 'str | None' = None*, *size: 'int | None' = None*, *function_name: 'str | None' = None*, *function_args: 'dict | None' = None*, ***, *batch_size*, *device=None*, *names=None*)[[source]](../../_modules/torchrl/data/llm/history.html#ContentBase)
+*class*torchrl.data.llm.ContentBase(*type: "Literal['text'*, *'image'*, *'audio'*, *'video'*, *'file'*, *'function_call']" = <function _wrap_td_method.<locals>.wrapped_func at 0x7f9c25dea340>*, *text: 'str | None' = None*, *url: 'str | None' = None*, *data: 'str | None' = None*, *mime_type: 'str | None' = None*, *name: 'str | None' = None*, *size: 'int | None' = None*, *function_name: 'str | None' = None*, *function_args: 'dict | None' = None*, ***, *batch_size*, *device=None*, *names=None*)[[source]](../../_modules/torchrl/data/llm/history.html#ContentBase)
 
 cat(*dim: int = 0*, ***, *out=None*)
 
@@ -279784,7 +279784,7 @@ To register the hook at another location than the default, use
 
 # LogValidationReward
 
-*class*torchrl.trainers.LogValidationReward(***, *record_interval: int*, *record_frames: int*, *frame_skip: int = 1*, *policy_exploration: [TensorDictModule](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule)*, *environment: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*, *exploration_type: [InteractionType](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.InteractionType.html#tensordict.nn.InteractionType) = InteractionType.RANDOM*, *log_keys: list[str | tuple[str]] | None = None*, *out_keys: dict[str | tuple[str], str] | None = None*, *suffix: str | None = None*, *log_pbar: bool = False*, *recorder: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*)[[source]](../../_modules/torchrl/trainers/trainers.html#LogValidationReward)
+*class*torchrl.trainers.LogValidationReward(***, *record_interval: int*, *record_frames: int | None = None*, *record_episodes: int | None = None*, *frame_skip: int = 1*, *policy_exploration: [TensorDictModule](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule)*, *environment: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*, *exploration_type: [InteractionType](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.InteractionType.html#tensordict.nn.InteractionType) = InteractionType.RANDOM*, *log_keys: list[str | tuple[str]] | None = None*, *out_keys: dict[str | tuple[str], str] | None = None*, *suffix: str | None = None*, *log_pbar: bool = False*, *recorder: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*)[[source]](../../_modules/torchrl/trainers/trainers.html#LogValidationReward)
 
 Recorder hook for [`Trainer`](torchrl.trainers.Trainer.html#torchrl.trainers.Trainer).
 
@@ -279792,8 +279792,12 @@ Parameters:
 
 - **record_interval** (*int*) - total number of optimization steps
 between two calls to the recorder for testing.
-- **record_frames** (*int*) - number of frames to be recorded during
-testing.
+- **record_frames** (*int**,**optional*) - number of frames per environment to record
+during testing. With `record_episodes`, caps the number of steps
+per episode; capped partial episodes are included in reward statistics.
+- **record_episodes** (*int**,**optional*) - number of complete episodes per environment
+to record during testing, unless capped by `record_frames`. Without
+a frame cap, environments must eventually terminate or truncate.
 - **frame_skip** (*int*) - frame_skip used in the environment. It is
 important to let the trainer know the number of frames skipped at
 each iteration, otherwise the frame count can be underestimated.
@@ -294896,7 +294900,7 @@ Hooks for customizing the training loop at various points.
 | [`LogScalar`](generated/torchrl.trainers.LogScalar.html#torchrl.trainers.LogScalar)([key, logname, log_pbar, ...]) | Generic scalar logger hook for any tensor values in the batch. |
 | [`LRSchedulerHook`](generated/torchrl.trainers.LRSchedulerHook.html#torchrl.trainers.LRSchedulerHook)(scheduler[, interval]) | A hook that steps a learning-rate scheduler during training. |
 | [`OptimizerHook`](generated/torchrl.trainers.OptimizerHook.html#torchrl.trainers.OptimizerHook)(optimizer[, loss_components]) | Add an optimizer for one or more loss components. |
-| [`LogValidationReward`](generated/torchrl.trainers.LogValidationReward.html#torchrl.trainers.LogValidationReward)(*, record_interval, ...) | Recorder hook for [`Trainer`](generated/torchrl.trainers.Trainer.html#torchrl.trainers.Trainer). |
+| [`LogValidationReward`](generated/torchrl.trainers.LogValidationReward.html#torchrl.trainers.LogValidationReward)(*, record_interval[, ...]) | Recorder hook for [`Trainer`](generated/torchrl.trainers.Trainer.html#torchrl.trainers.Trainer). |
 | [`ReplayBufferTrainer`](generated/torchrl.trainers.ReplayBufferTrainer.html#torchrl.trainers.ReplayBufferTrainer)(replay_buffer[, ...]) | Replay buffer hook provider. |
 | [`RewardNormalizer`](generated/torchrl.trainers.RewardNormalizer.html#torchrl.trainers.RewardNormalizer)([decay, scale, eps, ...]) | Reward normalizer hook. |
 | [`SelectKeys`](generated/torchrl.trainers.SelectKeys.html#torchrl.trainers.SelectKeys)(keys) | Selects keys in a TensorDict batch. |

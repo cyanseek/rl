@@ -1,6 +1,6 @@
 # LogValidationReward
 
-*class*torchrl.trainers.LogValidationReward(***, *record_interval: int*, *record_frames: int*, *frame_skip: int = 1*, *policy_exploration: [TensorDictModule](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule)*, *environment: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*, *exploration_type: [InteractionType](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.InteractionType.html#tensordict.nn.InteractionType) = InteractionType.RANDOM*, *log_keys: list[str | tuple[str]] | None = None*, *out_keys: dict[str | tuple[str], str] | None = None*, *suffix: str | None = None*, *log_pbar: bool = False*, *recorder: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*)[[source]](../../_modules/torchrl/trainers/trainers.html#LogValidationReward)
+*class*torchrl.trainers.LogValidationReward(***, *record_interval: int*, *record_frames: int | None = None*, *record_episodes: int | None = None*, *frame_skip: int = 1*, *policy_exploration: [TensorDictModule](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.TensorDictModule.html#tensordict.nn.TensorDictModule)*, *environment: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*, *exploration_type: [InteractionType](https://docs.pytorch.org/tensordict/stable/reference/generated/tensordict.nn.InteractionType.html#tensordict.nn.InteractionType) = InteractionType.RANDOM*, *log_keys: list[str | tuple[str]] | None = None*, *out_keys: dict[str | tuple[str], str] | None = None*, *suffix: str | None = None*, *log_pbar: bool = False*, *recorder: [EnvBase](torchrl.envs.EnvBase.html#torchrl.envs.EnvBase) = None*)[[source]](../../_modules/torchrl/trainers/trainers.html#LogValidationReward)
 
 Recorder hook for [`Trainer`](torchrl.trainers.Trainer.html#torchrl.trainers.Trainer).
 
@@ -8,8 +8,12 @@ Parameters:
 
 - **record_interval** (*int*) - total number of optimization steps
 between two calls to the recorder for testing.
-- **record_frames** (*int*) - number of frames to be recorded during
-testing.
+- **record_frames** (*int**,**optional*) - number of frames per environment to record
+during testing. With `record_episodes`, caps the number of steps
+per episode; capped partial episodes are included in reward statistics.
+- **record_episodes** (*int**,**optional*) - number of complete episodes per environment
+to record during testing, unless capped by `record_frames`. Without
+a frame cap, environments must eventually terminate or truncate.
 - **frame_skip** (*int*) - frame_skip used in the environment. It is
 important to let the trainer know the number of frames skipped at
 each iteration, otherwise the frame count can be underestimated.
